@@ -257,8 +257,9 @@ With optional prefix argument just run `rgrep'."
   "alist mapping of keys to functions in `rinari-minor-mode'")
 
 (mapcar (lambda (el)
-	  (eval `(define-key rinari-minor-mode-map 
-		   ,(format "\C-c;%s" (car el)) ,(cdr el)))
+;;; i don't like mapping C-c; as a prefix.
+;;; 	  (eval `(define-key rinari-minor-mode-map 
+;;; 		   ,(format "\C-c;%s" (car el)) ,(cdr el)))
 	  (eval `(define-key rinari-minor-mode-map 
 		   ,(format "\C-c'%s" (car el)) ,(cdr el))))
 	rinari-minor-mode-keybindings)
