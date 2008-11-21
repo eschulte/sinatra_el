@@ -2,6 +2,13 @@
 
 ;; Copyright (C) 2008 Eric Schulte
 
+;; Author: Eric Schulte
+;; URL: http://www.emacswiki.org/cgi-bin/emacs/ruby-compilation.el
+;; Version: 0.5
+;; Created: 2008-08-23
+;; Keywords: test convenience
+;; Package-Requires: (("ruby-mode") ("inf-ruby"))
+
 ;;; License:
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -27,16 +34,27 @@
 ;;
 ;; The functions you will probably want to use are
 ;; 
-;; ruby-run-w/compilation
-;; ruby-rake-w/compilation
+;; ruby-compilation-run
+;; ruby-compilation-rake
+;; ruby-compilation-this-buffer (C-x t)
+;; ruby-compilation-this-buffer (C-x C-t)
 ;;
 
+;;; TODO:
+
+;; Clean up function names so they use a common prefix.
+;; "p" doesn't work at the end of the compilation buffer.
+;; Package it up with dependencies for ELPA.
+
 ;;; Code:
+
 (require 'ansi-color)
 (require 'pcmpl-rake)
+(require 'compile)
+(require 'inf-ruby)
+(require 'which-func)
 
 (defvar ruby-compilation-error-regexp
-  ;; "^\\([[:space:]]*\\|.*\\[\\|.*at \\)\\[?\\([^[:space:]]*\\):\\([[:digit:]]+\\)[]:)$]"
   "^\\([[:space:]]*\\|.*\\[\\|[^\*].*at \\)\\[?\\([^[:space:]]*\\):\\([[:digit:]]+\\)[]:)\n]?"
   "regular expression to match errors in ruby process output")
 
@@ -45,14 +63,22 @@
   "a version of `compilation-error-regexp-alist' to be used in
   rails logs (should be used with `make-local-variable')")
 
-(defun ruby-run-w/compilation (cmd)
+(defvar ruby-compilation-executable "ruby"
+  "What bin to use to launch the tests. Override if you use JRuby etc.")
+
+(defvar ruby-compilation-test-name-flag "-n"
+  "What flag to use to specify that you want to run a single test.")
+
+(defun ruby-compilation-run (cmd)
   "Run a ruby process dumping output to a ruby compilation buffer."
   (interactive "FRuby Comand: ")
   (let ((name (file-name-nondirectory (car (split-string cmd))))
-	(cmdlist (cons "ruby" (ruby-args-to-list (expand-file-name cmd)))))
-    (pop-to-buffer (ruby-do-run-w/compilation name cmdlist))))
+	(cmdlist (cons ruby-compilation-executable
+                       ;; What on earth is ruby-args-to-list?
+                       (ruby-args-to-list (expand-file-name cmd)))))
+    (pop-to-buffer (ruby-compilation-do name cmdlist))))
 
-(defun ruby-rake-w/compilation (&optional edit task)
+(defun ruby-compilation-rake (&optional edit task)
   "Run a rake process dumping output to a ruby compilation buffer."
   (interactive "P")
   (let* ((task (or task (if (stringp edit) edit)
@@ -60,11 +86,37 @@
 	 (rake-args (if (and edit (not (stringp edit)))
 			(read-from-minibuffer "Edit Rake Command: " (concat task " "))
 		      task)))
-    (pop-to-buffer (ruby-do-run-w/compilation
+    (pop-to-buffer (ruby-compilation-do
 		    "rake" (cons "rake"
 				 (ruby-args-to-list rake-args))))))
 
-(defun ruby-do-run-w/compilation (name cmdlist)
+(defun ruby-compilation-this-buffer ()
+  "Run the current buffer through Ruby compilation."
+  (interactive)
+  (ruby-compilation-run (buffer-file-name)))
+
+(defun ruby-compilation-this-test ()
+  "Run the test at point through Ruby compilation."
+  (interactive)
+  (let ((test-name (ruby-compilation-this-test-name)))
+    (pop-to-buffer (ruby-compilation-do
+                    (format "ruby: %s - %s"
+                            (file-name-nondirectory (buffer-file-name))
+                            test-name)
+                    (list ruby-compilation-executable
+                          (buffer-file-name)
+                          ruby-compilation-test-name-flag test-name)))))
+
+(defun ruby-compilation-this-test-name ()
+  "Which test are we currently in?"
+  (let ((this-test (which-function)))
+    (if (listp this-test) (setq this-test (car this-test)))
+    (if (or (not this-test)
+            (not (string-match "#test_" this-test)))
+        (message "Point is not in a test.")
+      (cadr (split-string this-test "#")))))
+
+(defun ruby-compilation-do (name cmdlist)
   (let ((comp-buffer-name (format "*%s*" name)))
     (unless (comint-check-proc comp-buffer-name)
       ;; (if (get-buffer comp-buffer-name) (kill-buffer comp-buffer-name)) ;; actually rather keep
@@ -87,6 +139,7 @@
 
 (defun ruby-compilation-insertion-filter (proc string)
   "Insert text to buffer stripping ansi color codes"
+  ;; Can we use ansi-color-apply-on-region instead?
   (with-current-buffer (process-buffer proc)
     (let ((moving (= (point) (process-mark proc))))
       (save-excursion
@@ -116,24 +169,34 @@ compilation buffer."
     (forward-line 1))
   (compilation-next-error 1) (recenter))
 
-;; minor mode
 (defvar ruby-compilation-minor-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "q"    'quit-window)
+    (define-key map "p"    'previous-error-no-select)
+    (define-key map "n"    'next-error-no-select)
+    (define-key map "\M-p" 'ruby-compilation-previous-error-group)
+    (define-key map "\M-n" 'ruby-compilation-next-error-group)
+    (define-key map (kbd "C-c C-c") 'comint-interrupt-subjob)
     map)
   "Key map for Ruby Compilation minor mode.")
-
-(define-key ruby-compilation-minor-mode-map "p"    'previous-error-no-select)
-(define-key ruby-compilation-minor-mode-map "n"    'next-error-no-select)
-(define-key ruby-compilation-minor-mode-map "\M-p" 'ruby-compilation-previous-error-group)
-(define-key ruby-compilation-minor-mode-map "\M-n" 'ruby-compilation-next-error-group)
-(define-key ruby-compilation-minor-mode-map (kbd "C-c C-c") 'comint-interrupt-subjob)
 
 (define-minor-mode ruby-compilation-minor-mode
   "Enable Ruby Compilation minor mode providing some key-bindings
   for navigating ruby compilation buffers."
   nil
-  " Ruby:Comp"
+  " ruby:comp"
   ruby-compilation-minor-mode-map)
 
+;; So we can invoke it easily.
+(eval-after-load 'ruby-mode
+  '(progn
+     (define-key ruby-mode-map (kbd "C-x t") 'ruby-compilation-this-buffer)
+     (define-key ruby-mode-map (kbd "C-x C-t") 'ruby-compilation-this-test)))
+
+;; So we don't get warnings with .dir-settings.el files
+(dolist (executable (list "jruby" "rbx" "ruby1.9" "ruby1.8" "ruby"))
+  (add-to-list 'safe-local-variable-values
+               (cons 'ruby-compilation-executable executable)))
+   
 (provide 'ruby-compilation)
 ;;; ruby-compilation.el ends here
