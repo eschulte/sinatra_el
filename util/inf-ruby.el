@@ -50,6 +50,7 @@
   (let ((map (copy-keymap comint-mode-map)))
     (define-key map (kbd "C-c C-l") 'inf-ruby-load-file)
     (define-key map (kbd "C-x C-e") 'ruby-send-last-sexp)
+    (define-key map (kbd "TAB") 'inf-ruby-complete-or-tab)
     map)
   "*Mode map for inf-ruby-mode")
 
@@ -310,6 +311,34 @@ Then switch to the process buffer."
   (comint-send-string (inf-ruby-proc) (concat "(load \""
                                               file-name
                                               "\"\)\n")))
+
+(defun inf-ruby-completions (curr)
+  (let* ((proc (get-buffer-process inf-ruby-buffer))
+	 (comint-filt (process-filter proc))
+	 (kept "") completions)
+    (set-process-filter proc (lambda (proc string) (setf kept (concat kept string))))
+    (process-send-string proc (format "puts IRB::InputCompletor::CompletionProc.call('%s').compact\n" curr))
+    (while (not (string-match "^=> nil" kept)) (accept-process-output proc))
+    (setf completions (butlast (split-string kept) 2))
+    ;; cleanup
+    (save-excursion (move-beginning-of-line 1) (backward-delete-char 3)) ;; remove extra prompt
+    (set-process-filter proc comint-filt) ;; restore comint filter
+    completions))
+
+(defun inf-ruby-complete-or-tab ()
+  "Try to complete the ruby code at point.  Relies on ruby irb/completion."
+  (interactive)
+  (let* ((completions (inf-ruby-completions (thing-at-point 'line)))
+	 (command (case (length completions)
+		    (0 nil)
+		    (1 (car completions))
+		    (t (completing-read "completion: " completions)))))
+    (if (not command)
+	(call-interactively 'indent-for-tab-command)
+      (move-beginning-of-line 1)
+      (kill-line 1)
+      (insert command))))
+
 ;;;###autoload
 (eval-after-load 'ruby-mode
   '(add-hook 'ruby-mode-hook 'inf-ruby-keys))
