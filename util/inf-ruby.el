@@ -55,10 +55,10 @@
   "*Mode map for inf-ruby-mode")
 
 (defvar inf-ruby-implementations
-  '(("ruby"     . "irb --inf-ruby-mode")
-    ("jruby"    . "jruby -S irb")
-    ("rubinius" . "rbx")
-    ("yarv"     . "irb1.9 --inf-ruby-mode")) ;; TODO: ironruby?
+  '(("ruby"     . "irb --inf-ruby-mode -r irb/completion")
+    ("jruby"    . "jruby -S irb -r irb/completion")
+    ("rubinius" . "rbx -r irb/completion")
+    ("yarv"     . "irb1.9 --inf-ruby-mode -r irb/completion")) ;; TODO: ironruby?
   "An alist of ruby implementations to irb executable names.")
 
 ;; TODO: do we need these two defvars?
@@ -312,32 +312,35 @@ Then switch to the process buffer."
                                               file-name
                                               "\"\)\n")))
 
-(defun inf-ruby-completions (curr)
+(defun inf-ruby-completions (seed)
+  "Return a list of completions for the line of ruby code starting with SEED."
   (let* ((proc (get-buffer-process inf-ruby-buffer))
 	 (comint-filt (process-filter proc))
 	 (kept "") completions)
     (set-process-filter proc (lambda (proc string) (setf kept (concat kept string))))
-    (process-send-string proc (format "puts IRB::InputCompletor::CompletionProc.call('%s').compact\n" curr))
-    (while (not (string-match "^=> nil" kept)) (accept-process-output proc))
-    (setf completions (butlast (split-string kept) 2))
-    ;; cleanup
-    (save-excursion (move-beginning-of-line 1) (backward-delete-char 3)) ;; remove extra prompt
-    (set-process-filter proc comint-filt) ;; restore comint filter
+    (process-send-string proc (format "puts IRB::InputCompletor::CompletionProc.call('%s').compact\n" seed))
+    (while (not (string-match inf-ruby-prompt-pattern kept)) (accept-process-output proc))
+    (if (string-match "^[[:alpha:]]+?Error: " kept) (error kept))
+    (setf completions (butlast (split-string kept "[\r\n]") 2))
+    (set-process-filter proc comint-filt)
     completions))
 
-(defun inf-ruby-complete-or-tab ()
-  "Try to complete the ruby code at point.  Relies on ruby irb/completion."
-  (interactive)
-  (let* ((completions (inf-ruby-completions (thing-at-point 'line)))
-	 (command (case (length completions)
-		    (0 nil)
-		    (1 (car completions))
-		    (t (completing-read "completion: " completions)))))
-    (if (not command)
-	(call-interactively 'indent-for-tab-command)
-      (move-beginning-of-line 1)
-      (kill-line 1)
-      (insert command))))
+(defun inf-ruby-complete-or-tab (&optional command)
+  "Either complete the ruby code at point or call
+`indent-for-tab-command' if no completion is available.  Relies
+on the irb/completion Module used by readline when running irb
+through a terminal."
+  (interactive (list (let* ((curr (thing-at-point 'line))
+			    (completions (inf-ruby-completions curr)))
+		       (case (length completions)
+			 (0 nil)
+			 (1 (car completions))
+			 (t (completing-read "possible completions: " completions nil 'confirm-only curr))))))
+  (if (not command)
+      (call-interactively 'indent-for-tab-command)
+    (move-beginning-of-line 1)
+    (kill-line 1)
+    (insert command)))
 
 ;;;###autoload
 (eval-after-load 'ruby-mode
