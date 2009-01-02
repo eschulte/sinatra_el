@@ -564,10 +564,14 @@ otherwise turn `rinari-minor-mode' off if it is on."
       (if rinari-minor-mode (rinari-minor-mode)))))
 
 ;;;###autoload
-(dolist (hook (if (boundp 'rinari-major-modes)
-		  rinari-major-modes
-		'('find-file-hook 'mumamo-after-change-major-mode-hook 'dired-mode-hook)))
-  (add-hook hook 'rinari-launch))
+(defvar rinari-major-modes
+  (if (boundp 'rinari-major-modes)
+      rinari-major-modes
+    (list 'find-file-hook 'mumamo-after-change-major-mode-hook 'dired-mode-hook))
+  "Major Modes from which to launch Rinari.")
+
+;;;###autoload
+(dolist (hook rinari-major-modes) (add-hook hook 'rinari-launch))
 
 (defadvice cd (after rinari-on-cd activate)
   "Active/Deactive rinari-minor-node when changing into and out
