@@ -559,7 +559,9 @@ otherwise turn `rinari-minor-mode' off if it is on."
       (if rinari-minor-mode (rinari-minor-mode)))))
 
 (defvar rinari-major-modes
-  '('find-file-hook 'mumamo-after-change-major-mode-hook 'dired-mode-hook)
+  (if (boundp 'rinari-major-modes)
+      rinari-major-modes
+    '('find-file-hook 'mumamo-after-change-major-mode-hook 'dired-mode-hook))
   "Major Modes from which to launch Rinari.")
 
 (mapcar (lambda (hook)
