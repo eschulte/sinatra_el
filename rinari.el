@@ -506,19 +506,25 @@ renders and redirects to find the final controller or view."
 	      (list (car cv) (cdr cv))))))
       . "app/views/\\1/\\2.*")))))
 
-(mapcar
- (lambda (type)
-   (let ((name (first type))
-	 (specs (third type))
-	 (make (fourth type)))
-     (eval `(defjump
-	      (quote ,(read (format "rinari-find-%S" name)))
-	      (quote ,specs)
-	      'rinari-root
-	      ,(format "Go to the most logical %S given the current location" name)
-	      ,(if make `(quote ,make))
-	      'ruby-add-log-current-method))))
- rinari-jump-schema)
+(defun rinari-apply-jump-schema (schema)
+  "This function takes a of SCHEMA s.t. each element in the list
+can be fed to `defjump'.  This is used to define all of the
+rinari-find-* functions, and can be used to customize their
+behavior."
+  (mapcar
+   (lambda (type)
+     (let ((name (first type))
+	   (specs (third type))
+	   (make (fourth type)))
+       (eval `(defjump
+		(quote ,(read (format "rinari-find-%S" name)))
+		(quote ,specs)
+		'rinari-root
+		,(format "Go to the most logical %S given the current location" name)
+		,(if make `(quote ,make))
+		'ruby-add-log-current-method))))
+   schema))
+(rinari-apply-jump-schema rinari-jump-schema)
 
 ;;--------------------------------------------------------------------
 ;; minor mode and keymaps
