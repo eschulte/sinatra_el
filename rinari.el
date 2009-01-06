@@ -112,7 +112,8 @@
 		      "environment.rb" (expand-file-name "config" dir)))
       dir
     (let ((new-dir (expand-file-name (file-name-as-directory "..") dir)))
-      (unless (string-match "\\(^[[:alpha:]]:/$\\|^/$\\)" dir)
+      ;; regexp to match windows roots, tramp roots, or regular posix roots
+      (unless (string-match "\\(^[[:alpha:]]:/$\\|^/[^\/]+:\\|^/$\\)" dir)
 	(rinari-root new-dir)))))
 
 ;;--------------------------------------------------------------------------------
