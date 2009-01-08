@@ -83,6 +83,11 @@
 (defvar rinari-minor-mode-hook nil
   "*Hook for customising Rinari.")
 
+(defcustom rinari-rails-env nil
+  "Use this to force a value for RAILS_ENV when running rinari.
+Leave this set to nil to not force any value for RAILS_ENV, and
+leave this to the environment variables outside of Emacs.")
+
 (defadvice ruby-compilation-run (around rinari-compilation-run activate)
   "Set default directory to the root of the rails application
   before running ruby processes."
@@ -125,7 +130,8 @@ output dumped to a compilation buffer allowing jumping between
 errors and source code.  With optional prefix argument allows
 editing of the rake command arguments."
   (interactive "P")
-  (ruby-compilation-rake task edit-cmd-args))
+  (ruby-compilation-rake task edit-cmd-args
+			 (if rinari-rails-env (list (cons "RAILS_ENV" rinari-rails-env)))))
 
 (defun rinari-script (&optional script)
   "Tab completing selection of a script from the script/
@@ -171,11 +177,12 @@ history and links between errors and source code.  With optional
 prefix argument allows editing of the console command arguments."
   (interactive "P")
   (let* ((script ;; (concat (rinari-root) "script/console")
-	  (expand-file-name "console" (file-name-as-directory
-				       (expand-file-name "script" (rinari-root)))))
+	  (concat (expand-file-name "console" (file-name-as-directory
+					       (expand-file-name "script" (rinari-root))))
+		  (if rinari-rails-env (concat " " rinari-rails-env))))
 	 (command (if edit-cmd-args
-		      (read-string "Run Ruby: " (concat script " "))
-		    script)))
+			      (read-string "Run Ruby: " (concat script " "))
+			    script)))
     (run-ruby command)
     (save-excursion
       (set-buffer "*ruby*")
@@ -188,7 +195,7 @@ prefix argument allows editing of the console command arguments."
 from your conf/database.sql file."
   (interactive)
   (flet ((sql-name (env) (format "*%s-sql*" env)))
-    (let* ((environment (or (getenv "RAILS_ENV") "development"))
+    (let* ((environment (or rinari-rails-env (getenv "RAILS_ENV") "development"))
 	   (sql-buffer (get-buffer (sql-name environment))))
       (if sql-buffer
 	  (pop-to-buffer sql-buffer)
@@ -222,9 +229,10 @@ allowing jumping between errors and source code.  With optional
 prefix argument allows editing of the server command arguments."
   (interactive "P")
   (let* ((default-directory (rinari-root))
-	 (script (expand-file-name "server"
-				   (file-name-as-directory
-				    (expand-file-name "script" (rinari-root)))))
+	 (script (concat (expand-file-name "server"
+					   (file-name-as-directory
+					    (expand-file-name "script" (rinari-root))))
+			 (if rinari-rails-env (concat " -e " rinari-rails-env))))
 	 (command (if edit-cmd-args
 		      (read-string "Run Ruby: " (concat script " "))
 		    script)))
@@ -584,6 +592,33 @@ otherwise turn `rinari-minor-mode' off if it is on."
   "Active/Deactive rinari-minor-node when changing into and out
   of raills project directories."
   (rinari-launch))
+
+;; ;;; Experimenting with setting rinari-rails-env on eshell `cd'
+;; (defadvice cd (after dir-locals-on-cd activate)
+;;   "Apply the variables defined in .dir-locals.el when changing
+;; into and outof a directory in eshell."
+;;   (let ((variables-file (dir-locals-find-file default-directory))
+;; 	(class nil)
+;; 	(dir-name nil))
+;;     (cond
+;;      ((stringp variables-file)
+;;       (setq dir-name (file-name-directory default-directory))
+;;       (setq class (dir-locals-read-from-file variables-file)))
+;;      ((consp variables-file)
+;;       (setq dir-name (car variables-file))
+;;       (setq class (cdr variables-file))))
+;;     (when class
+;;       (let ((variables
+;; 	     (dir-locals-collect-variables
+;; 	      (dir-locals-get-class-variables class) dir-name nil)))
+;; 	(when variables
+;; 	  (hack-local-variables-filter variables dir-name))))))
+;; 
+;; (defadvice cd (after dir-locals-on-cd activate)
+;;   "Apply the variables defined in .dir-locals.el when changing
+;; into and outof a directory in eshell."
+;;   (let ((buffer-file-name default-directory))
+;;     (hack-dir-local-variables)))
 
 ;;;###autoload
 (define-minor-mode rinari-minor-mode
