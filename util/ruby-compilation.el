@@ -77,11 +77,16 @@
                        (split-string (expand-file-name cmd)))))
     (pop-to-buffer (ruby-compilation-do name cmdlist))))
 
-(defun ruby-compilation-rake (&optional edit task)
+(defun ruby-compilation-rake (&optional edit task env-vars)
   "Run a rake process dumping output to a ruby compilation buffer."
   (interactive "P")
-  (let* ((task (or task (if (stringp edit) edit)
-		   (completing-read "Rake: " (pcmpl-rake-tasks))))
+  (let* ((task (concat
+		(or task (if (stringp edit) edit)
+		    (completing-read "Rake: " (pcmpl-rake-tasks)))
+		" "
+		(mapconcat (lambda (pair)
+			     (format "%s=%s" (car pair) (cdr pair)))
+			   env-vars " ")))
 	 (rake-args (if (and edit (not (stringp edit)))
 			(read-from-minibuffer "Edit Rake Command: " (concat task " "))
 		      task)))
