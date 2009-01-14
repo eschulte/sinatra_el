@@ -593,40 +593,6 @@ otherwise turn `rinari-minor-mode' off if it is on."
   of raills project directories."
   (rinari-launch))
 
-;; apply .dir-locals.el to eshell buffers on `cd'
-(defadvice cd (around dir-locals-on-cd activate)
-  "Apply the variables defined in .dir-locals.el when changing
-into and outof a directory in eshell."
-  ;; clean up old variables
-  (while file-local-variables-alist
-    (let ((x (pop file-local-variables-alist)))
-      (kill-local-variable x)))
-  ;; cd
-  ad-do-it
-  ;; run hack-dir-local-variables w/o buffer-file-name
-  (let ((variables-file (dir-locals-find-file default-directory))
-	(class nil)
-	(dir-name nil))
-    (cond
-     ((stringp variables-file)
-      (setq dir-name (file-name-directory default-directory))
-      (setq class (dir-locals-read-from-file variables-file)))
-     ((consp variables-file)
-      (setq dir-name (car variables-file))
-      (setq class (cdr variables-file))))
-    (when class
-      (let ((variables
-	     (dir-locals-collect-variables
-	      (dir-locals-get-class-variables class) dir-name nil)))
-	(when variables
-	  (hack-local-variables-filter variables dir-name)))))
-  ;; apply file-local-variables to buffer
-  (while file-local-variables-alist
-    (let ((x (pop file-local-variables-alist)))
-      (if (consp x)
-          (set (car x) (cdr x))
-        (kill-local-variable x)))))
-
 ;;;###autoload
 (define-minor-mode rinari-minor-mode
   "Enable Rinari minor mode providing Emacs support for working
