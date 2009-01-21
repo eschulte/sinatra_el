@@ -10,7 +10,7 @@
                                    "-e"))))
 
 (fset 'ruby-compilation-this-test-name-old
-  'ruby-compilation-this-test-name)
+      (symbol-function 'ruby-compilation-this-test-name))
 
 (defun ruby-compilation-this-test-name ()
   (if (equal ruby-compilation-executable "spec")
