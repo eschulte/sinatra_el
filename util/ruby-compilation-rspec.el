@@ -20,7 +20,7 @@
 (defun ruby-compilation-this-spec-name ()
   "Which test are we currently in?"
   (save-excursion
-    (search-backward-regexp "it [\"']\\(.*\\)[\"'] do")
+    (search-backward-regexp "\\(?:it\\|specify\\|example\\) [\"']\\(.*\\)[\"'] do")
     (match-string 1)))
   
 (provide 'ruby-compilation-rspec)
