@@ -30,6 +30,24 @@ promotion!!
 
 - [[http://www.emacswiki.org/cgi-bin/wiki/EmacsScreencasts]]
 
+** script
+1) download rinari
+2) install rinari (with changes to .init file)
+   1) this should probably be on a fresh emacs install which has had
+      some of the required modes (yaml, javascript, etc...) put into
+      place
+   2) should this example be made using the emacs starter kit?
+3) 
+
+** tools
+- http://www.emacswiki.org/emacs/CommandLogMode
+- probably want to produce this on the mac
+
+** where to post
+probably would be best either on github, or on rubyforge.
+
+I don't think this is possible to do on rubyforge
+
 * TODO Merb support [1/4]
   :PROPERTIES:
   :suggested-by: Jorge Calás Lozano

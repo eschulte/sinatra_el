@@ -69,6 +69,10 @@
 (defvar ruby-compilation-test-name-flag "-n"
   "What flag to use to specify that you want to run a single test.")
 
+(defvar ruby-compilation-clear-between t
+  "Whether to clear the compilation output between runs.")
+
+;;;###autoload
 (defun ruby-compilation-run (cmd)
   "Run a ruby process dumping output to a ruby compilation buffer."
   (interactive "FRuby Comand: ")
@@ -77,11 +81,17 @@
                        (split-string (expand-file-name cmd)))))
     (pop-to-buffer (ruby-compilation-do name cmdlist))))
 
-(defun ruby-compilation-rake (&optional edit task)
+;;;###autoload
+(defun ruby-compilation-rake (&optional edit task env-vars)
   "Run a rake process dumping output to a ruby compilation buffer."
   (interactive "P")
-  (let* ((task (or task (if (stringp edit) edit)
-		   (completing-read "Rake: " (pcmpl-rake-tasks))))
+  (let* ((task (concat
+		(or task (if (stringp edit) edit)
+		    (completing-read "Rake: " (pcmpl-rake-tasks)))
+		" "
+		(mapconcat (lambda (pair)
+			     (format "%s=%s" (car pair) (cdr pair)))
+			   env-vars " ")))
 	 (rake-args (if (and edit (not (stringp edit)))
 			(read-from-minibuffer "Edit Rake Command: " (concat task " "))
 		      task)))
@@ -89,6 +99,7 @@
 		    "rake" (cons "rake"
 				 (split-string rake-args))))))
 
+;;;###autoload
 (defun ruby-compilation-this-buffer ()
   "Run the current buffer through Ruby compilation."
   (interactive)
@@ -184,7 +195,9 @@ compilation buffer."
   for navigating ruby compilation buffers."
   nil
   " ruby:comp"
-  ruby-compilation-minor-mode-map)
+  ruby-compilation-minor-mode-map
+  (when ruby-compilation-clear-between
+    (delete-region (point-min) (point-max))))
 
 ;; So we can invoke it easily.
 (eval-after-load 'ruby-mode
