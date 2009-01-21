@@ -88,7 +88,7 @@
 Leave this set to nil to not force any value for RAILS_ENV, and
 leave this to the environment variables outside of Emacs.")
 
-(defadvice ruby-compilation-run (around rinari-compilation-run activate)
+(defadvice ruby-compilation-do (around rinari-compilation-do activate)
   "Set default directory to the root of the rails application
   before running ruby processes."
   (let ((default-directory (or (rinari-root) default-directory)))
