@@ -236,7 +236,7 @@ prefix argument allows editing of the server command arguments."
 	 (command (if edit-cmd-args
 		      (read-string "Run Ruby: " (concat script " "))
 		    script)))
-    (ruby-compilation-run command)))
+    (ruby-compilation-run command)) (rinari-launch))
 
 (defun rinari-insert-erb-skeleton (no-equals)
   "Insert an erb skeleton at point, with optional prefix argument
