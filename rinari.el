@@ -544,8 +544,9 @@ behavior."
   "Key map for Rinari minor mode.")
 
 (defun rinari-bind-key-to-func (key func)
-  (eval `(define-key rinari-minor-mode-map 
-	   ,(format "\C-c;%s" key) ,func))
+;;; i don't like mapping C-c; as a prefix
+;;;   (eval `(define-key rinari-minor-mode-map 
+;;; 	   ,(format "\C-c;%s" key) ,func))
   (eval `(define-key rinari-minor-mode-map 
 	   ,(format "\C-c'%s" key) ,func)))
 
