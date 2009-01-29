@@ -73,13 +73,13 @@
 
 ;;;###autoload
 (defun cucumber-compilation-this-buffer ()
-  "Run the current buffer's cucumbers through cucumber."
+  "Run the current buffer's scenarios through cucumber."
   (interactive)
   (cucumber-compilation-run (buffer-file-name)))
 
 ;;;###autoload
 (defun cucumber-compilation-this-scenario ()
-  "Run the cucumber at point through cucumber."
+  "Run the scenario at point through cucumber."
   (interactive)
   (let ((scenario-name (cucumber-compilation-this-scenario-name))
         (profile-name (cucumber-compilation-profile-name)))
@@ -94,7 +94,7 @@
 
 ;;;###autoload
 (defun cucumber-compilation-run (cmd)
-  "Run a cucumber process dumping output to a compilation buffer."
+  "Run a cucumber process, dumping output to a compilation buffer."
   (interactive)
   (let* ((name (file-name-nondirectory (car (split-string cmd))))
          (profile-name (cucumber-compilation-profile-name))
