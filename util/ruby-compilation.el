@@ -122,10 +122,23 @@
 	    (set (make-local-variable 'inf-ruby-prompt-pattern) "^cap> ")))
       (progn ;; handle all cap commands aside from shell
 	(pop-to-buffer (ruby-compilation-do "cap" (cons "cap" (split-string cap-args))))
-	;; change keybindings to make capistrano compilation more interactive
-	(define-key ruby-compilation-minor-mode-map "p" 'self-insert-command)
-	(define-key ruby-compilation-minor-mode-map "n" 'self-insert-command)
-	(define-key ruby-compilation-minor-mode-map [return] 'comint-send-input)))))
+	(ruby-capistrano-minor-mode) ;; override some keybindings to make interaction possible
+	(push (cons 'ruby-capistrano-minor-mode ruby-capistrano-minor-mode-map) minor-mode-map-alist)))))
+
+(defvar ruby-capistrano-minor-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "n" 'self-insert-command)
+    (define-key map "p" 'self-insert-command)
+    (define-key map "q" 'self-insert-command)
+    (define-key map [return] 'comint-send-input) map)
+  "Key map for Ruby Capistrano minor mode.")
+
+(define-minor-mode ruby-capistrano-minor-mode
+  "Enable Ruby Compilation minor mode providing some key-bindings
+  for navigating ruby compilation buffers."
+  nil
+  " capstrano"
+  ruby-capistrano-minor-mode-map)
 
 ;;;###autoload
 (defun ruby-compilation-this-buffer ()
