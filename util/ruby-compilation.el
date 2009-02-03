@@ -100,6 +100,30 @@
 				 (split-string rake-args))))))
 
 ;;;###autoload
+(defun ruby-compilation-cap (&optional edit task env-vars)
+  "Run a capistrano process dumping output to a ruby compilation buffer."
+  (interactive "P")
+  (let* ((task (concat
+		(or task (if (stringp edit) edit)
+		    (completing-read "Cap: " (pcmpl-cap-tasks)))
+		" "
+		(mapconcat (lambda (pair)
+			     (format "%s=%s" (car pair) (cdr pair)))
+			   env-vars " ")))
+	 (cap-args (if (and edit (not (stringp edit)))
+		       (read-from-minibuffer "Edit Cap Command: " (concat task " "))
+		     task)))
+    (if (not (string-match "shell" task))
+	;; handle all cap commands aside from shell
+	(pop-to-buffer (ruby-compilation-do "cap" (cons "cap" (split-string cap-args))))
+      ;; hand the shell command to `run-ruby'
+      (run-ruby (concat "cap " cap-args) "cap")
+      (save-excursion
+	(set-buffer "*cap*")
+	(set (make-local-variable 'inf-ruby-first-prompt-pattern) "^cap> ")
+	(set (make-local-variable 'inf-ruby-prompt-pattern) "^cap> ")))))
+
+;;;###autoload
 (defun ruby-compilation-this-buffer ()
   "Run the current buffer through Ruby compilation."
   (interactive)

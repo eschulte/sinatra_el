@@ -102,6 +102,13 @@ leave this to the environment variables outside of Emacs.")
     ad-do-it
     (rinari-launch)))
 
+(defadvice ruby-compilation-cap (around rinari-compilation-cap activate)
+  "Set default directory to the root of the rails application
+  before running cap processes."
+  (let ((default-directory (or (rinari-root) default-directory)))
+    ad-do-it
+    (rinari-launch)))
+
 (defun rinari-parse-yaml ()
   (let ((start (point))
 	(end (save-excursion (re-search-forward "^[^:]*$" nil t) (point)))
@@ -133,6 +140,15 @@ editing of the rake command arguments."
   (ruby-compilation-rake task edit-cmd-args
 			 (if rinari-rails-env (list (cons "RAILS_ENV" rinari-rails-env)))))
 
+(defun rinari-cap (&optional task edit-cmd-args)
+  "Tab completion selection of a capistrano task to execute with
+the output dumped to a compilation buffer allowing jumping
+between errors and source code.  With optional prefix argument
+allows editing of the cap command arguments."
+  (interactive "P")
+  (ruby-compilation-cap task edit-cmd-args
+			(if rinari-rails-env (list (cons "RAILS_ENV" rinari-rails-env)))))
+
 (defun rinari-script (&optional script)
   "Tab completing selection of a script from the script/
 directory of the rails application."
@@ -146,17 +162,6 @@ directory of the rails application."
 	    ruby-compilation-error-regexp-alist))
 	 (script (concat "script/" script " ")))
     (ruby-compilation-run (concat root script (read-from-minibuffer script)))))
-
-(defun rinari-cap (&optional task)
-  "Tab completion selection of a capistrano task."
-  (interactive)
-  (cd (rinari-root))
-  (let ((output (split-string (shell-command-to-string "cap -T") "\n")) (tasks '()))
-    (dolist (line output)
-      (if (string-match "^cap \\([a-z]+[:_a-z]*\\) *.*$" line)
-          (add-to-list 'tasks (match-string 1 line))))
-    (or task (setq task (completing-read "Task: " tasks)))
-    (ruby-compilation-run (concat "/usr/bin/cap " task))))
 
 (defun rinari-test (&optional edit-cmd-args)
   "Test the current ruby function.  If current function is not a
