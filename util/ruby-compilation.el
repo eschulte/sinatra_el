@@ -113,15 +113,19 @@
 	 (cap-args (if (and edit (not (stringp edit)))
 		       (read-from-minibuffer "Edit Cap Command: " (concat task " "))
 		     task)))
-    (if (not (string-match "shell" task))
-	;; handle all cap commands aside from shell
+    (if (string-match "shell" task)
+	(progn ;; hand the shell command to `run-ruby'
+	  (run-ruby (concat "cap " cap-args) "cap")
+	  (save-excursion
+	    (set-buffer "*cap*")
+	    (set (make-local-variable 'inf-ruby-first-prompt-pattern) "^cap> ")
+	    (set (make-local-variable 'inf-ruby-prompt-pattern) "^cap> ")))
+      (progn ;; handle all cap commands aside from shell
 	(pop-to-buffer (ruby-compilation-do "cap" (cons "cap" (split-string cap-args))))
-      ;; hand the shell command to `run-ruby'
-      (run-ruby (concat "cap " cap-args) "cap")
-      (save-excursion
-	(set-buffer "*cap*")
-	(set (make-local-variable 'inf-ruby-first-prompt-pattern) "^cap> ")
-	(set (make-local-variable 'inf-ruby-prompt-pattern) "^cap> ")))))
+	;; change keybindings to make capistrano compilation more interactive
+	(define-key ruby-compilation-minor-mode-map "p" 'self-insert-command)
+	(define-key ruby-compilation-minor-mode-map "n" 'self-insert-command)
+	(define-key ruby-compilation-minor-mode-map [return] 'comint-send-input)))))
 
 ;;;###autoload
 (defun ruby-compilation-this-buffer ()
