@@ -134,6 +134,7 @@
 	     (proc (get-buffer-process buffer)))
 	(save-excursion
 	  (set-buffer buffer) ;; set buffer local variables and process ornaments
+          (buffer-disable-undo)
 	  (set-process-sentinel proc 'ruby-compilation-sentinel)
 	  (set-process-filter proc 'ruby-compilation-insertion-filter)
 	  (set (make-local-variable 'compilation-error-regexp-alist)
