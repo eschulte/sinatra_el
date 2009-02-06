@@ -102,6 +102,13 @@ leave this to the environment variables outside of Emacs.")
     ad-do-it
     (rinari-launch)))
 
+(defadvice ruby-compilation-cap (around rinari-compilation-cap activate)
+  "Set default directory to the root of the rails application
+  before running cap processes."
+  (let ((default-directory (or (rinari-root) default-directory)))
+    ad-do-it
+    (rinari-launch)))
+
 (defun rinari-parse-yaml ()
   (let ((start (point))
 	(end (save-excursion (re-search-forward "^[^:]*$" nil t) (point)))
@@ -132,6 +139,15 @@ editing of the rake command arguments."
   (interactive "P")
   (ruby-compilation-rake task edit-cmd-args
 			 (if rinari-rails-env (list (cons "RAILS_ENV" rinari-rails-env)))))
+
+(defun rinari-cap (&optional task edit-cmd-args)
+  "Tab completion selection of a capistrano task to execute with
+the output dumped to a compilation buffer allowing jumping
+between errors and source code.  With optional prefix argument
+allows editing of the cap command arguments."
+  (interactive "P")
+  (ruby-compilation-cap task edit-cmd-args
+			(if rinari-rails-env (list (cons "RAILS_ENV" rinari-rails-env)))))
 
 (defun rinari-script (&optional script)
   "Tab completing selection of a script from the script/
@@ -555,7 +571,8 @@ behavior."
     ("r" . 'rinari-rake)                ("c" . 'rinari-console)
     ("w" . 'rinari-web-server)          ("g" . 'rinari-rgrep)
     ("x" . 'rinari-extract-partial)
-    (";" . 'rinari-find-by-context)     ("'" . 'rinari-find-by-context))
+    (";" . 'rinari-find-by-context)     ("'" . 'rinari-find-by-context)
+    ("d" . 'rinari-cap))
   "alist mapping of keys to functions in `rinari-minor-mode'")
 
 (mapcar (lambda (el) (rinari-bind-key-to-func (car el) (cdr el)))

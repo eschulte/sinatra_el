@@ -36,6 +36,9 @@
 
 ;; Provides pcompletion for the `rake' command, which is basically
 ;; `make' implemented in Ruby.
+;;
+;; Adding pcompletion for the `cap' command see http://www.capify.org/
+;; which is a tool for auotmating tasks via ssh on remote servers.
 
 ;;; Code:
 
@@ -43,7 +46,6 @@
 
 ;;;###autoload
 (defun pcomplete/rake ()
-  "Completion rules for the `ssh' command."
   (pcomplete-here (pcmpl-rake-tasks)))
 
 (defun pcmpl-rake-tasks ()
@@ -53,6 +55,17 @@ exec-to-string command, but it works and seems fast"
    (delq nil (mapcar '(lambda(line)
 			(if (string-match "rake \\([^ ]+\\)" line) (match-string 1 line)))
 		     (split-string (shell-command-to-string "rake -T") "[\n]"))))
+
+(defun pcomplete/cap ()
+  (pcomplete-here (pcmpl-cap-tasks)))
+
+(defun pcmpl-cap-tasks ()
+   "Return a list of all the cap tasks defined in the current
+project.  I know this is a hack to put all the logic in the
+exec-to-string command, but it works and seems fast"
+   (delq nil (mapcar '(lambda(line)
+			(if (string-match "cap \\([^ ]+\\)" line) (match-string 1 line)))
+		     (split-string (shell-command-to-string "cap -T") "[\n]"))))
 
 (provide 'pcmpl-rake)
 ;;; pcmpl-rake.el ends here

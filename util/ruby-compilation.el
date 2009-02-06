@@ -100,6 +100,47 @@
 				 (split-string rake-args))))))
 
 ;;;###autoload
+(defun ruby-compilation-cap (&optional edit task env-vars)
+  "Run a capistrano process dumping output to a ruby compilation buffer."
+  (interactive "P")
+  (let* ((task (concat
+		(or task (if (stringp edit) edit)
+		    (completing-read "Cap: " (pcmpl-cap-tasks)))
+		" "
+		(mapconcat (lambda (pair)
+			     (format "%s=%s" (car pair) (cdr pair)))
+			   env-vars " ")))
+	 (cap-args (if (and edit (not (stringp edit)))
+		       (read-from-minibuffer "Edit Cap Command: " (concat task " "))
+		     task)))
+    (if (string-match "shell" task)
+	(progn ;; hand the shell command to `run-ruby'
+	  (run-ruby (concat "cap " cap-args) "cap")
+	  (save-excursion
+	    (set-buffer "*cap*")
+	    (set (make-local-variable 'inf-ruby-first-prompt-pattern) "^cap> ")
+	    (set (make-local-variable 'inf-ruby-prompt-pattern) "^cap> ")))
+      (progn ;; handle all cap commands aside from shell
+	(pop-to-buffer (ruby-compilation-do "cap" (cons "cap" (split-string cap-args))))
+	(ruby-capistrano-minor-mode) ;; override some keybindings to make interaction possible
+	(push (cons 'ruby-capistrano-minor-mode ruby-capistrano-minor-mode-map) minor-mode-map-alist)))))
+
+(defvar ruby-capistrano-minor-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "n" 'self-insert-command)
+    (define-key map "p" 'self-insert-command)
+    (define-key map "q" 'self-insert-command)
+    (define-key map [return] 'comint-send-input) map)
+  "Key map for Ruby Capistrano minor mode.")
+
+(define-minor-mode ruby-capistrano-minor-mode
+  "Enable Ruby Compilation minor mode providing some key-bindings
+  for navigating ruby compilation buffers."
+  nil
+  " capstrano"
+  ruby-capistrano-minor-mode-map)
+
+;;;###autoload
 (defun ruby-compilation-this-buffer ()
   "Run the current buffer through Ruby compilation."
   (interactive)
