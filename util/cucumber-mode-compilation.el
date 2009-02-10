@@ -64,6 +64,9 @@
 (defvar cucumber-compilation-clear-between t
   "Whether to clear the compilation output between runs.")
 
+(defvar cucumber-compilation-reuse-buffers t
+  "Whether to re-use the same comint buffer for focussed tests.")
+
 (defadvice cucumber-compilation-do (around cucumber-compilation-do activate)
   "Set default directory to the root of the rails application
   before running cucumber processes."
@@ -84,13 +87,20 @@
   (let ((scenario-name (cucumber-compilation-this-scenario-name))
         (profile-name (cucumber-compilation-profile-name)))
     (pop-to-buffer (cucumber-compilation-do
-                    (format "cucumber: %s - %s"
-                            (file-name-nondirectory (buffer-file-name))
-                            scenario-name)
+                    (cucumber-compilation-this-test-buffer-name scenario-name)
                     (list cucumber-compilation-executable
                           (buffer-file-name)
                           "-p" profile-name
                           "-s" scenario-name)))))
+
+(defun cucumber-compilation-this-test-buffer-name (scenario-name)
+  "The name of the buffer in which test-at-point will run."
+  (interactive)
+  (if cucumber-compilation-reuse-buffers
+      (file-name-nondirectory (buffer-file-name))
+    (format "cucumber: %s - %s"
+            (file-name-nondirectory (buffer-file-name))
+            scenario-name)))
 
 ;;;###autoload
 (defun cucumber-compilation-run (cmd)

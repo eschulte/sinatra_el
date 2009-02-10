@@ -72,6 +72,9 @@
 (defvar ruby-compilation-clear-between t
   "Whether to clear the compilation output between runs.")
 
+(defvar ruby-compilation-reuse-buffers t
+  "Whether to re-use the same comint buffer for focussed tests.")
+
 ;;;###autoload
 (defun ruby-compilation-run (cmd)
   "Run a ruby process dumping output to a ruby compilation buffer."
@@ -151,12 +154,19 @@
   (interactive)
   (let ((test-name (ruby-compilation-this-test-name)))
     (pop-to-buffer (ruby-compilation-do
-                    (format "ruby: %s - %s"
-                            (file-name-nondirectory (buffer-file-name))
-                            test-name)
+                    (ruby-compilation-this-test-buffer-name test-name)
                     (list ruby-compilation-executable
                           (buffer-file-name)
                           ruby-compilation-test-name-flag test-name)))))
+
+(defun ruby-compilation-this-test-buffer-name (test-name)
+  "The name of the buffer in which test-at-point will run."
+  (interactive)
+  (if ruby-compilation-reuse-buffers
+      (file-name-nondirectory (buffer-file-name))
+    (format "ruby: %s - %s"
+            (file-name-nondirectory (buffer-file-name))
+            test-name)))
 
 (defun ruby-compilation-this-test-name ()
   "Which test are we currently in?"
