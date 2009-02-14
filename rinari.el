@@ -4,14 +4,11 @@
 
 ;; Authors: Phil Hagelberg, Eric Schulte
 ;; URL: http://rinari.rubyforge.org
-;; Version: 2.0
+;; Version: 2.1
 ;; Created: 2006-11-10
 ;; Keywords: ruby, rails, project, convenience, web
 ;; EmacsWiki: Rinari
-;; Package-Requires: ((ruby-mode "1.0")
-;;                    (inf-ruby "2.0")
-;;                    (ruby-compilation "0.5")
-;;                    (jump "2.0"))
+;; Package-Requires: ((ruby-mode "1.1") (inf-ruby "2.1") (ruby-compilation "0.7") (jump "2.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -40,27 +37,32 @@
 ;; aimed towards making Emacs into a top-notch Ruby and Rails
 ;; development environment.
 
-;; Copy the directory containing this file into your Emacs lisp
-;; directory, assumed here to be ~/.emacs.d. Add these lines of code
-;; to your .emacs file:
+;; Rinari can be installed through ELPA (see http://tromey.com/elpa/)
 
-;; ;; ido
-;; (require 'ido)
-;; (ido-mode t)
+;; To install from source, copy the directory containing this file
+;; into your Emacs lisp directory, assumed here to be ~/.emacs.d. Add
+;; these lines of code to your .emacs file:
+
 ;; ;; rinari
 ;; (add-to-list 'load-path "~/.emacs.d/rinari")
 ;; (require 'rinari)
 
-;; Note: if you cloned this from a git repo, you probably have to grab
-;; the submodules which can be done simply with the following commands
-;; from the root of the rinari directory
+;; Whether installed through ELPA or from source you probably want to
+;; add the following lines to your .emacs file:
+
+;; ;; ido
+;; (require 'ido)
+;; (ido-mode t)
+
+;; Note: if you cloned this from a git repo, you will have to grab the
+;; submodules which can be done by running the following commands from
+;; the root of the rinari directory
 
 ;;  git submodule init
 ;;  git submodule update
 
-;; See TODO file in this directory.
-
 ;;; Code:
+;;;###begin-elpa-ignore
 (let* ((this-dir (file-name-directory (or load-file-name buffer-file-name)))
        (util-dir (file-name-as-directory
 		  (expand-file-name "util" this-dir)))
@@ -69,6 +71,7 @@
   (add-to-list 'load-path this-dir)
   (add-to-list 'load-path util-dir)
   (add-to-list 'load-path jump-dir))
+;;;###end-elpa-ignore
 (require 'ruby-mode)
 (require 'inf-ruby)
 (require 'ruby-compilation)

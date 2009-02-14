@@ -6,7 +6,7 @@
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/RubyMode
 ;; Created: Fri Feb  4 14:49:13 JST 1994
 ;; Keywords: languages ruby
-;; Version: 1.0
+;; Version: 1.1
 
 ;; This file is not yet part of GNU Emacs.
 
@@ -1411,11 +1411,12 @@ See `font-lock-syntax-table'.")
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 
 ;;;###autoload
-(add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
-(add-to-list 'interpreter-mode-alist '("rbx" . ruby-mode))
-(add-to-list 'interpreter-mode-alist '("jruby" . ruby-mode))
-(add-to-list 'interpreter-mode-alist '("ruby1.9" . ruby-mode))
-(add-to-list 'interpreter-mode-alist '("ruby1.8" . ruby-mode))
+(progn
+  (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+  (add-to-list 'interpreter-mode-alist '("rbx" . ruby-mode))
+  (add-to-list 'interpreter-mode-alist '("jruby" . ruby-mode))
+  (add-to-list 'interpreter-mode-alist '("ruby1.9" . ruby-mode))
+  (add-to-list 'interpreter-mode-alist '("ruby1.8" . ruby-mode)))
 
 (provide 'ruby-mode)
 ;;; ruby-mode.el ends here

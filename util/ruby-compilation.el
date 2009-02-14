@@ -4,10 +4,10 @@
 
 ;; Author: Eric Schulte
 ;; URL: http://www.emacswiki.org/cgi-bin/emacs/ruby-compilation.el
-;; Version: 0.5
+;; Version: 0.7
 ;; Created: 2008-08-23
 ;; Keywords: test convenience
-;; Package-Requires: (("ruby-mode") ("inf-ruby"))
+;; Package-Requires: ((ruby-mode "1.1") (inf-ruby "2.1"))
 
 ;;; License:
 
@@ -49,7 +49,7 @@
 ;;; Code:
 
 (require 'ansi-color)
-(require 'pcmpl-rake)
+(require 'pcomplete)
 (require 'compile)
 (require 'inf-ruby)
 (require 'which-func)
@@ -74,6 +74,30 @@
 
 (defvar ruby-compilation-reuse-buffers t
   "Whether to re-use the same comint buffer for focussed tests.")
+
+;;;###autoload
+(defun pcomplete/rake ()
+  (pcomplete-here (pcmpl-rake-tasks)))
+
+(defun pcmpl-rake-tasks ()
+   "Return a list of all the rake tasks defined in the current
+projects.  I know this is a hack to put all the logic in the
+exec-to-string command, but it works and seems fast"
+   (delq nil (mapcar '(lambda(line)
+			(if (string-match "rake \\([^ ]+\\)" line) (match-string 1 line)))
+		     (split-string (shell-command-to-string "rake -T") "[\n]"))))
+
+;;;###autoload
+(defun pcomplete/cap ()
+  (pcomplete-here (pcmpl-cap-tasks)))
+
+(defun pcmpl-cap-tasks ()
+   "Return a list of all the cap tasks defined in the current
+project.  I know this is a hack to put all the logic in the
+exec-to-string command, but it works and seems fast"
+   (delq nil (mapcar '(lambda(line)
+			(if (string-match "cap \\([^ ]+\\)" line) (match-string 1 line)))
+		     (split-string (shell-command-to-string "cap -T") "[\n]"))))
 
 ;;;###autoload
 (defun ruby-compilation-run (cmd)
