@@ -96,11 +96,9 @@
 Leave this set to nil to not force any value for RAILS_ENV, and
 leave this to the environment variables outside of Emacs.")
 
-(defcustom rinari-minor-mode-prefixes
+(defvar rinari-minor-mode-prefixes
   (list ";" "'")
-  "List of characters, each of which will be bound (with C-c) as a rinari-minor-mode keymap prefix."
-  :group 'rinari
-  :type 'sexp)
+  "List of characters, each of which will be bound (with C-c) as a rinari-minor-mode keymap prefix.")
 
 (defadvice ruby-compilation-do (around rinari-compilation-do activate)
   "Set default directory to the root of the rails application
