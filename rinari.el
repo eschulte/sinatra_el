@@ -78,6 +78,11 @@
 (require 'jump)
 (require 'cl)
 
+(defgroup rinari nil
+  "Rinari customizations."
+  :prefix "rinari-"
+  :group 'rinari)
+
 (defcustom rinari-tags-file-name
   "TAGS"
   "Path to your TAGS file inside of your rails project.  See `tags-file-name'."
