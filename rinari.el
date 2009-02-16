@@ -96,6 +96,12 @@
 Leave this set to nil to not force any value for RAILS_ENV, and
 leave this to the environment variables outside of Emacs.")
 
+(defcustom rinari-minor-mode-prefixes
+  (list ";" "'")
+  "List of characters, each of which will be bound (with C-c) as a rinari-minor-mode keymap prefix."
+  :group 'rinari
+  :type 'sexp)
+
 (defadvice ruby-compilation-do (around rinari-compilation-do activate)
   "Set default directory to the root of the rails application
   before running ruby processes."
@@ -568,10 +574,9 @@ behavior."
   "Key map for Rinari minor mode.")
 
 (defun rinari-bind-key-to-func (key func)
-  (eval `(define-key rinari-minor-mode-map 
-	   ,(format "\C-c;%s" key) ,func))
-  (eval `(define-key rinari-minor-mode-map 
-	   ,(format "\C-c'%s" key) ,func)))
+  (dolist (prefix rinari-minor-mode-prefixes)
+    (eval `(define-key rinari-minor-mode-map 
+             ,(format "\C-c%s%s" prefix key) ,func))))
 
 (defvar rinari-minor-mode-keybindings
   '(("s" . 'rinari-script)              ("q" . 'rinari-sql)
