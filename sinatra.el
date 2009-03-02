@@ -107,6 +107,18 @@ With optional prefix argument just run `rgrep'."
     (let ((word (thing-at-point 'word)))
       (funcall 'rgrep (read-from-minibuffer "search for: " word)
 	       sinatra-rgrep-file-endings (sinatra-root)))))
+;;--------------------------------------------------------------------
+;; MuMaMo support
+;;
+;; 
+
+(define-mumamo-multi-major-mode sinatra-mode
+  "Major mode for sinatra."
+  ("Sinatra" ruby-mode (mumamo-chunk-sinatra)))
+
+(defun mumamo-chunk-sinatra (pos min max)
+  "Use `haml-mode' for everything following __END__"
+  (mumamo-quick-static-chunk pos min max "__END__" "-#end-of-file" nil 'haml-mode nil))
 
 ;;--------------------------------------------------------------------
 ;; minor mode and keymaps
@@ -132,6 +144,14 @@ with the Sinatra web mini-framework."
   nil
   " do-be-do-be-doooo"
   sinatra-minor-mode-map)
+
+;;;###autoload
+(defun sinatra-launch ()
+  "Launch Sinatra's helpers providing Emacs support for working
+with the Sinatra web mini-framework."
+  (interactive)
+  (sinatra-mode)
+  (sinatra-minor-mode))
 
 (provide 'sinatra)
 ;;; sinatra.el ends here
