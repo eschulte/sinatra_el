@@ -32,6 +32,13 @@
 ;;; Commentary:
 
 ;;; Code:
+;;;###begin-elpa-ignore
+(let* ((this-dir (file-name-directory (or load-file-name buffer-file-name)))
+       (util-dir (file-name-as-directory
+		  (expand-file-name "util" this-dir))))
+  (add-to-list 'load-path this-dir)
+  (add-to-list 'load-path util-dir))
+;;;###end-elpa-ignore
 (require 'mumamo)
 (require 'ruby-mode)
 (require 'inf-ruby)
@@ -44,7 +51,7 @@
   :group 'sinatra)
 
 (defvar sinatra-minor-mode-hook nil
-  "*Hook for customising Sinatra.")
+  "Hook for customising Sinatra minor mode.")
 
 (defvar sinatra-minor-mode-prefixes
   (list ";" "'")
@@ -56,7 +63,6 @@
 
 ;;--------------------------------------------------------------------------------
 ;; user functions
-
 (defun sinatra-rake (&optional task edit-cmd-args)
   "Tab completion selection of a rake task to execute with the
 output dumped to a compilation buffer allowing jumping between
@@ -88,8 +94,7 @@ prefix argument allows editing of the server command arguments."
 		    script)))
     (ruby-compilation-run command)))
 
-(defvar sinatra-rgrep-file-endings
-  "*.[^l]*"
+(defvar sinatra-rgrep-file-endings "*.[^l]*"
   "Ending of files to search for matches using `sinatra-rgrep'")
 
 (defun sinatra-rgrep (&optional arg)
@@ -101,11 +106,11 @@ With optional prefix argument just run `rgrep'."
     (let ((word (thing-at-point 'word)))
       (funcall 'rgrep (read-from-minibuffer "search for: " word)
 	       sinatra-rgrep-file-endings (sinatra-root)))))
+
 ;;--------------------------------------------------------------------
 ;; MuMaMo support
 ;;
 ;; 
-
 (defun mumamo-chunk-sinatra (pos min max)
   "Use `haml-mode' for everything following __END__"
   (mumamo-quick-static-chunk pos min max "__END__" "-#end-of-file" nil 'haml-mode nil))
@@ -116,7 +121,6 @@ With optional prefix argument just run `rgrep'."
 
 ;;--------------------------------------------------------------------
 ;; minor mode and keymaps
-
 (defvar sinatra-minor-mode-map (make-sparse-keymap) "Key map for Sinatra minor mode.")
 
 (defun sinatra-bind-key-to-func (key func)
@@ -140,8 +144,6 @@ with the Sinatra web mini-framework."
   sinatra-minor-mode-map)
 
 ;;;###autoload
-;; So this is ugly, but it's the only way to get the major and minor
-;; modes turned on in one command.
 (fset 'sinatra-launch
    [?\M-x ?s ?i ?n ?a ?t ?r ?a ?- ?m ?o ?d ?e return ?\M-x ?s ?i ?n ?a ?t ?r ?a ?- ?m ?i ?n ?o ?r ?- ?m ?o ?d ?e return])
 

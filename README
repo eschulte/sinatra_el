@@ -5,3 +5,9 @@ This includes...
 - a command for quickly running irb in your sinatra environment
 - a command for quickly running your sinatra web-server allowing jumping from errors to source
 - bundled with some basic ruby modes
+
+To use these Sinatra modes...
+1) add this directory to your load path
+2) add this to your .emacs init file
+    (require 'sinatra)
+3) open your sinatra application file, and run M-x sinatra-launch
