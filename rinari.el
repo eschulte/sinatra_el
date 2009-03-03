@@ -604,7 +604,7 @@ otherwise turn `rinari-minor-mode' off if it is on."
 		    (and (file-exists-p r-tags-path) r-tags-path))
 	       (run-hooks 'rinari-minor-mode-hook)
 	       (rinari-minor-mode t))
-      (if (and (fboundp rinari-minor-mode) rinari-nimor-mode) (rinari-minor-mode)))))
+      (if (and (fboundp rinari-minor-mode) rinari-minor-mode) (rinari-minor-mode)))))
 
 ;;;###autoload
 (defvar rinari-major-modes
