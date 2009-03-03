@@ -32,6 +32,7 @@
 ;;; Commentary:
 
 ;;; Code:
+(require 'mumamo)
 (require 'ruby-mode)
 (require 'inf-ruby)
 (require 'ruby-compilation)
@@ -45,18 +46,16 @@
 (defvar sinatra-minor-mode-hook nil
   "*Hook for customising Sinatra.")
 
-(defcustom sinatra-env nil
-  "Use this to force a value for RAILS_ENV when running sinatra.
-Leave this set to nil to not force any value for RAILS_ENV, and
-leave this to the environment variables outside of Emacs.")
-
 (defvar sinatra-minor-mode-prefixes
   (list ";" "'")
   "List of characters, each of which will be bound (with C-c) as a sinatra-minor-mode keymap prefix.")
 
+(defvar sinatra-file nil
+  "Don't set this variable by hand, it is for passing the root to new buffer created by `sinatra-mode'.")
+
 (defun sinatra-root ()
   "Return the root of the sinatra project"
-  (file-name-directory (buffer-file-name)))
+  (or (file-name-directory sinatra-file) (file-name-directory (buffer-file-name))))
 
 ;;--------------------------------------------------------------------------------
 ;; user functions
@@ -67,32 +66,34 @@ output dumped to a compilation buffer allowing jumping between
 errors and source code.  With optional prefix argument allows
 editing of the rake command arguments."
   (interactive "P")
-  (ruby-compilation-rake task edit-cmd-args
-			 (if sinatra-env (list (cons "RAILS_ENV" sinatra-env)))))
+  (let ((root (sinatra-root)))
+    (ruby-compilation-rake task edit-cmd-args)
+    (sinatra-launch root)))
 
 (defun sinatra-console (&optional edit-cmd-args)
   "Run script/console in a compilation buffer, with command
 history and links between errors and source code.  With optional
 prefix argument allows editing of the console command arguments."
   (interactive "P")
-  (let* ((req (buffer-file-name)))
+  (let* ((req (or (buffer-file-name) sinatra-file)))
     (run-ruby (format "irb -r %s --simple-prompt" req))
     (save-excursion
       (pop-to-buffer "*ruby*")
       (set (make-local-variable 'inf-ruby-first-prompt-pattern) "^>> ")
       (set (make-local-variable 'inf-ruby-prompt-pattern) "^>> ")
-      (sinatra-minor-mode t))))
+      (sinatra-launch req))))
 
 (defun sinatra-web-server (&optional edit-cmd-args)
   "Run script/server.  Dump output to a compilation buffer
 allowing jumping between errors and source code.  With optional
 prefix argument allows editing of the server command arguments."
   (interactive "P")
-  (let* ((script (buffer-file-name))
+  (let* ((root (sinatra-root))
+         (script (or (buffer-file-name) sinatra-file))
 	 (command (if edit-cmd-args
 		      (read-string "Run Ruby: " (concat script " "))
 		    script)))
-    (ruby-compilation-run command)) (sinatra-minor-mode t))
+    (ruby-compilation-run command) (sinatra-minor-mode script)))
 
 (defvar sinatra-rgrep-file-endings
   "*.[^l]*"
@@ -112,13 +113,13 @@ With optional prefix argument just run `rgrep'."
 ;;
 ;; 
 
-(define-mumamo-multi-major-mode sinatra-mode
-  "Major mode for sinatra."
-  ("Sinatra" ruby-mode (mumamo-chunk-sinatra)))
-
 (defun mumamo-chunk-sinatra (pos min max)
   "Use `haml-mode' for everything following __END__"
   (mumamo-quick-static-chunk pos min max "__END__" "-#end-of-file" nil 'haml-mode nil))
+
+(define-mumamo-multi-major-mode sinatra-mode
+  "Major mode for sinatra."
+  ("Sinatra" ruby-mode (mumamo-chunk-sinatra)))
 
 ;;--------------------------------------------------------------------
 ;; minor mode and keymaps
@@ -146,12 +147,13 @@ with the Sinatra web mini-framework."
   sinatra-minor-mode-map)
 
 ;;;###autoload
-(defun sinatra-launch ()
+(defun sinatra-launch (&optional file)
   "Launch Sinatra's helpers providing Emacs support for working
 with the Sinatra web mini-framework."
   (interactive)
-  (sinatra-mode)
-  (sinatra-minor-mode))
+  (if root
+      (progn (sinatra-minor-mode t) (setq sinatra-file file))
+    (progn (sinatra-minor-mode t) (sinatra-mode t))))
 
 (provide 'sinatra)
 ;;; sinatra.el ends here
