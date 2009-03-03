@@ -50,12 +50,9 @@
   (list ";" "'")
   "List of characters, each of which will be bound (with C-c) as a sinatra-minor-mode keymap prefix.")
 
-(defvar sinatra-file nil
-  "Don't set this variable by hand, it is for passing the root to new buffer created by `sinatra-mode'.")
-
 (defun sinatra-root ()
   "Return the root of the sinatra project"
-  (or (file-name-directory sinatra-file) (file-name-directory (buffer-file-name))))
+  (file-name-directory (buffer-file-name)))
 
 ;;--------------------------------------------------------------------------------
 ;; user functions
@@ -66,34 +63,30 @@ output dumped to a compilation buffer allowing jumping between
 errors and source code.  With optional prefix argument allows
 editing of the rake command arguments."
   (interactive "P")
-  (let ((root (sinatra-root)))
-    (ruby-compilation-rake task edit-cmd-args)
-    (sinatra-launch root)))
+  (ruby-compilation-rake task edit-cmd-args))
 
 (defun sinatra-console (&optional edit-cmd-args)
   "Run script/console in a compilation buffer, with command
 history and links between errors and source code.  With optional
 prefix argument allows editing of the console command arguments."
   (interactive "P")
-  (let* ((req (or (buffer-file-name) sinatra-file)))
+  (let* ((req (buffer-file-name)))
     (run-ruby (format "irb -r %s --simple-prompt" req))
     (save-excursion
       (pop-to-buffer "*ruby*")
       (set (make-local-variable 'inf-ruby-first-prompt-pattern) "^>> ")
-      (set (make-local-variable 'inf-ruby-prompt-pattern) "^>> ")
-      (sinatra-launch req))))
+      (set (make-local-variable 'inf-ruby-prompt-pattern) "^>> "))))
 
 (defun sinatra-web-server (&optional edit-cmd-args)
   "Run script/server.  Dump output to a compilation buffer
 allowing jumping between errors and source code.  With optional
 prefix argument allows editing of the server command arguments."
   (interactive "P")
-  (let* ((root (sinatra-root))
-         (script (or (buffer-file-name) sinatra-file))
+  (let* ((script (buffer-file-name))
 	 (command (if edit-cmd-args
 		      (read-string "Run Ruby: " (concat script " "))
 		    script)))
-    (ruby-compilation-run command) (sinatra-minor-mode script)))
+    (ruby-compilation-run command)))
 
 (defvar sinatra-rgrep-file-endings
   "*.[^l]*"
@@ -147,13 +140,10 @@ with the Sinatra web mini-framework."
   sinatra-minor-mode-map)
 
 ;;;###autoload
-(defun sinatra-launch (&optional file)
-  "Launch Sinatra's helpers providing Emacs support for working
-with the Sinatra web mini-framework."
-  (interactive)
-  (if root
-      (progn (sinatra-minor-mode t) (setq sinatra-file file))
-    (progn (sinatra-minor-mode t) (sinatra-mode t))))
+;; So this is ugly, but it's the only way to get the major and minor
+;; modes turned on in one command.
+(fset 'sinatra-launch
+   [?\M-x ?s ?i ?n ?a ?t ?r ?a ?- ?m ?o ?d ?e return ?\M-x ?s ?i ?n ?a ?t ?r ?a ?- ?m ?i ?n ?o ?r ?- ?m ?o ?d ?e return])
 
 (provide 'sinatra)
 ;;; sinatra.el ends here
