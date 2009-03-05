@@ -1,13 +1,22 @@
 Emacs support for using the Sinatra web development DSL
 
 This includes...
-- a major mode combining ruby-mode and haml-mode for you main sinatra file
-- a command for quickly running irb in your sinatra environment
-- a command for quickly running your sinatra web-server allowing jumping from errors to source
+- a major mode combining ruby-mode and haml-mode for you main sinatra
+  file
+- a command `sinatra-console' for quickly running irb in your sinatra
+  environment
+- a command `sinatra-web-server' for quickly running your sinatra
+  web-server allowing jumping from errors to source
 - bundled with some basic ruby modes
 
-To use these Sinatra modes...
+To use Sinatra-Modes...
 1) add this directory to your load path
-2) add this to your .emacs init file
-    (require 'sinatra)
-3) open your sinatra application file, and run M-x sinatra-launch
+2) add this to your .emacs init file (require 'sinatra)
+3) open your sinatra application file, and run M-x sinatra-mode
+
+Note:
+due to limitation of MuMaMo-mode (or my understanding thereof) you
+must add the following haml comment line to the bottom of your file
+for haml mode to turn on following the __END__ marker.
+
+-#end-of-file

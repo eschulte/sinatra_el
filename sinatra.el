@@ -68,8 +68,7 @@
 output dumped to a compilation buffer allowing jumping between
 errors and source code.  With optional prefix argument allows
 editing of the rake command arguments."
-  (interactive "P")
-  (ruby-compilation-rake task edit-cmd-args))
+  (interactive "P") (ruby-compilation-rake task edit-cmd-args))
 
 (defun sinatra-console (&optional edit-cmd-args)
   "Run script/console in a compilation buffer, with command
@@ -115,9 +114,13 @@ With optional prefix argument just run `rgrep'."
   "Use `haml-mode' for everything following __END__"
   (mumamo-quick-static-chunk pos min max "__END__" "-#end-of-file" nil 'haml-mode nil))
 
+;;;###autoload
 (define-mumamo-multi-major-mode sinatra-mode
   "Major mode for sinatra."
   ("Sinatra" ruby-mode (mumamo-chunk-sinatra)))
+
+(add-hook 'mumamo-after-change-major-mode-hook
+          (lambda () (if (eq mumamo-multi-major-mode 'sinatra-mode) (sinatra-minor-mode t))))
 
 ;;--------------------------------------------------------------------
 ;; minor mode and keymaps
@@ -142,10 +145,6 @@ with the Sinatra web mini-framework."
   nil
   " do-be-do-be-doooo"
   sinatra-minor-mode-map)
-
-;;;###autoload
-(fset 'sinatra-launch
-   [?\M-x ?s ?i ?n ?a ?t ?r ?a ?- ?m ?o ?d ?e return ?\M-x ?s ?i ?n ?a ?t ?r ?a ?- ?m ?i ?n ?o ?r ?- ?m ?o ?d ?e return])
 
 (provide 'sinatra)
 ;;; sinatra.el ends here
