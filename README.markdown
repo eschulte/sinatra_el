@@ -2,15 +2,16 @@ Emacs support for using the [Sinatra](http://www.sinatrarb.com/) web development
 
 This includes...
 
-* a major mode combining ruby-mode and haml-mode for you main sinatra
+* a major mode combining ruby-mode and haml-mode for your main sinatra
   file
-* a command `sinatra-console' for quickly running irb in your sinatra
-  environment
-* a command `sinatra-web-server' for quickly running your sinatra
-  web-server allowing jumping from errors to source
+* a command <tt>sinatra-console</tt> <tt>\C-;c</tt> for quickly
+  running irb in your sinatra environment
+* a command <tt>sinatra-web-server</tt> <tt>\C-;w</tt> for quickly
+  running your sinatra web-server in an Emacs comint buffer allowing
+  jumping from errors to source
 * bundled with some basic ruby modes
 
-To use Sinatra-Modes...
+To use sinatra_el...
 
 1. add this directory to your load path
 2. add this to your .emacs init file <tt>(require 'sinatra)</tt>
